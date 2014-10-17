@@ -52,3 +52,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Don't upload the datasets
+data/lastfm_subset
+*.zip
