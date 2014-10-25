@@ -23,7 +23,7 @@ MSD_TRACK_LIST = os.path.join(
 LASTFM_DB_PATH = os.path.join(DATA_DIR, 'lastfm_tags.db')
 MXM_DB_PATH = os.path.join(DATA_DIR, 'mxm_dataset.db')
 
-OUTPUT_FILE = os.path.join(DATA_DIR, 'tag_track_data.json')
+OUTPUT_FILE = os.path.join(DATA_DIR, 'tag_track_data.txt')
 
 
 def to_write_or_not_to_write(track_data):
