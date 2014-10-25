@@ -11,19 +11,10 @@ Generates a file, each line containing the json:
 }
 """
 import json
-import os
 import sqlite3
 
 from datautils import *
-
-DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'data')
-
-MSD_TRACK_LIST = os.path.join(
-    DATA_DIR, 'MillionSongSubset/AdditionalFiles/subset_unique_tracks.txt')
-LASTFM_DB_PATH = os.path.join(DATA_DIR, 'lastfm_tags.db')
-MXM_DB_PATH = os.path.join(DATA_DIR, 'mxm_dataset.db')
-
-OUTPUT_FILE = os.path.join(DATA_DIR, 'tag_track_data.txt')
+from paths import *
 
 
 def to_write_or_not_to_write(track_data):
@@ -32,8 +23,8 @@ def to_write_or_not_to_write(track_data):
     to_write = True
 
     # Apply the filters
-    if len(track_data['wordcount']) < 10: to_write = False
-    if len(track_data['genre']) < 1: to_write = False
+    to_write = (len(track_data['wordcount']) < 10 or
+                len(track_data['genre']) < 1)
 
     return to_write
 
@@ -45,7 +36,8 @@ def main():
     tracks_processed = 0
     tracks_written = 0
 
-    with open(MSD_TRACK_LIST, 'r') as ftracks, open(OUTPUT_FILE, 'w') as outfile:
+    with open(MSD_TRACK_LIST, 'r') as ftracks,\
+            open(OUTPUT_FILE, 'w') as outfile:
         for line in ftracks:
             # Need to construct this dictionary and write to file as a json
             track_data = {
@@ -62,7 +54,11 @@ def main():
             # print '-' * 80
 
             # 2. Search for the list of last.fm tags associated with this song
-            tag_query = "SELECT tags.tag, tid_tag.val FROM tid_tag, tids, tags WHERE tags.ROWID=tid_tag.tag AND tid_tag.tid=tids.ROWID and tids.tid='%s'" % track_id;
+            tag_query = """SELECT tags.tag, tid_tag.val
+                           FROM tid_tag, tids, tags
+                           WHERE tags.ROWID=tid_tag.tag AND
+                                 tid_tag.tid=tids.ROWID AND
+                                 tids.tid='%s'""" % track_id
             res = lastfm_conn.execute(tag_query)
             tag_data = res.fetchall()
             # print tag_data
@@ -72,9 +68,13 @@ def main():
                     track_data['genre'] += [tag, ]
 
             # 3. Obtain the (stemmed) words and their counts for this track
-            wc_query = "SELECT words.ROWID, lyrics.word, lyrics.count from lyrics, words where lyrics.word = words.word and track_id = '%s'" % track_id;
+            wc_query = """SELECT words.ROWID, lyrics.word, lyrics.count
+                          FROM lyrics, words
+                          WHERE lyrics.word = words.word AND
+                                track_id = '%s'""" % track_id
             res = mxm_conn.execute(wc_query)
-            wc_data = res.fetchall() # Retrieves a list of tuples (word_id, word, word_count)
+            wc_data = res.fetchall()  # Retrieves a list of tuples
+                                      # (word_id, word, word_count)
             # print wc_data
             for word_id, word, word_count in wc_data:
                 track_data['wordcount'][word_id] = word_count
