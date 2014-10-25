@@ -148,8 +148,9 @@ Inspirational:
   - Classic Christian
   - Contemporary Gospel
   - Gospel
-  - "Christian & Gospel"
-  - "Praise & Worship"
+  - Christian
+  - Praise
+  - Worship
   - Qawwali
   - Southern Gospel
   - Traditional Gospel
@@ -172,7 +173,7 @@ Jazz:
   - Ethio-jazz
   - Fusion
   - Gypsy-Jazz
-  - Hard Bop
+  - Hard Bebop
   - Latin Jazz
   - Mainstream Jazz
   - Ragtime
@@ -182,7 +183,6 @@ K-Pop: []
 Karaoke: []
 Kayokyoku: []
 Latin:
-  - Alternativo
   - Rock Latino
   - Argentine Tango
   - Balada
@@ -270,11 +270,9 @@ Soundtrack:
 Spoken Word: []
 Tex-Mex:
   - Chicano
-  - Classic
   - Conjunto
   - Conjunto Progressive
   - New Mex
-  - Tex-Mex
 Vocal:
   - A cappella
   - Barbershop
