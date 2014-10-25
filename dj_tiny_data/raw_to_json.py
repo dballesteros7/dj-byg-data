@@ -11,18 +11,24 @@ Generates a file, each line containing the json:
 }
 """
 import json
+import os
 import sqlite3
+
 from datautils import *
 
-MSD_TRACK_LIST = '/Users/tribhu/dev-local/dj-byg-data/data/MillionSongSubset/AdditionalFiles/subset_unique_tracks.txt'
-LASTFM_DB_PATH = '/Users/tribhu/dev-local/dj-byg-data/data/lastfm_tags.db'
-MXM_DB_PATH = '/Users/tribhu/dev-local/dj-byg-data/data/mxm_dataset.db'
+DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'data')
 
-OUTPUT_FILE = '/Users/tribhu/dev-local/dj-byg-data/data/tag_track_data.txt'
+MSD_TRACK_LIST = os.path.join(
+    DATA_DIR, 'MillionSongSubset/AdditionalFiles/subset_unique_tracks.txt')
+LASTFM_DB_PATH = os.path.join(DATA_DIR, 'lastfm_tags.db')
+MXM_DB_PATH = os.path.join(DATA_DIR, 'mxm_dataset.db')
+
+OUTPUT_FILE = os.path.join(DATA_DIR, 'tag_track_data.json')
 
 
 def to_write_or_not_to_write(track_data):
-    '''Tracks are sometimes dirty, without any tags, or lyrics. So ,choose when to write.'''
+    '''Tracks are sometimes dirty, without any tags, or lyrics.
+    So ,choose when to write.'''
     to_write = True
 
     # Apply the filters
