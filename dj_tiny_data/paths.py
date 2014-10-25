@@ -7,6 +7,6 @@ MSD_TRACK_LIST = os.path.join(
     DATA_DIR, 'MillionSongSubset/AdditionalFiles/subset_unique_tracks.txt')
 LASTFM_DB_PATH = os.path.join(DATA_DIR, 'lastfm_tags.db')
 MXM_DB_PATH = os.path.join(DATA_DIR, 'mxm_dataset.db')
+GENRE_LIST_PATH = os.path.join(DATA_DIR, 'genres.yaml')
 
 OUTPUT_FILE = os.path.join(DATA_DIR, 'tag_track_data.txt')
-
