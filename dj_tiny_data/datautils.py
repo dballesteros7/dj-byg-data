@@ -31,7 +31,8 @@ def cache_clean_genres(func):
 
 @cache_clean_genres
 def tag_to_genre(tag, clean_genres):
-    """
+    """Clean the tag by searching for a match in the canonical list of genres.
+    This returns None if no suitable match is found.
     """
     tag = tag.encode('ascii', 'replace').lower()
     for genre in clean_genres:
