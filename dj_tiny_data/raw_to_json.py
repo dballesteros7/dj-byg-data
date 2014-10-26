@@ -21,7 +21,7 @@ def to_write_or_not_to_write(track_data):
     '''Tracks are sometimes dirty, without any tags, or lyrics.
     So ,choose when to write.'''
     return (len(track_data['wordcount']) > 10 and
-            len(track_data['genre']) > 1)
+            len(track_data['genres']) > 0)
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
             track_data = {
                 'id': None,
                 'wordcount': {},
-                'genre': set(),
+                'genres': set(),
             }
             # 1. Get the track ID
             track_id, song_id, artist_name, song_title = line.split('<SEP>')
@@ -60,7 +60,7 @@ def main():
             for tag, score in tag_data:
                 genre = tag_to_genre(tag)
                 if genre is not None:
-                    track_data['genre'].add(genre)
+                    track_data['genres'].add(genre)
 
             # 3. Obtain the (stemmed) words and their counts for this track
             wc_query = """SELECT words.ROWID, lyrics.word, lyrics.count
@@ -78,7 +78,7 @@ def main():
 
             # 4. Write to file this data as a json
             if to_write_or_not_to_write(track_data):
-                track_data['genre'] = list(track_data['genre'])
+                track_data['genres'] = list(track_data['genres'])
                 json_str = json.dumps(track_data, separators=(',', ':'))
                 outfile.write('%s\n' % json_str)
                 tracks_written += 1
