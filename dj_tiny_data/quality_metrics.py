@@ -1,4 +1,6 @@
 """This module defines several quality metrics for the produced clusters."""
+from collections import defaultdict
+
 import json
 
 from dj_tiny_data import data_structs, errors, paths
@@ -56,7 +58,7 @@ class QualityMetrics(object):
             return track
 
     def binary_genre_cluster_quality(self, cluster):
-        """Evaluate a cluster and give it a binary judgment.
+        """Evaluates a cluster and assigns it a binary judgment.
 
         A cluster is considered good when at least one genre is present in all
         tracks belonging to the cluster.
@@ -74,3 +76,28 @@ class QualityMetrics(object):
             print set(track.genres)
             intersecting_genres &= set(track.genres)
         return bool(intersecting_genres)
+
+    def majority_genre_cluster_quality(self, cluster):
+        """Evaluates a cluster and assigns a binary judgment to it.
+
+        A cluster is considered good when there is at least one genre that
+        appears in strictly more than half of the tracks in the clusters.
+
+        Args:
+            cluster: Set of track IDs that belong to the cluster.
+        Returns:
+            A boolean indicating whether the given cluster is good or bad
+            for identifying genres.
+        """
+        print 'CLUSTER ==========================='
+        genres_count = defaultdict(int)
+        for track_id in cluster:
+            track = self.retrieve_track_genres(track_id)
+            print set(track.genres)
+            for genre in track.genres:
+                genres_count[genre] += 1
+        for genre in genres_count:
+            threshold = len(cluster) / 2 + 1
+            if genres_count[genre] > threshold:
+                return True
+        return False
