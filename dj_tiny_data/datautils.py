@@ -3,9 +3,10 @@ A bunch of commonly used helper functions
 """
 import jellyfish
 import yaml
+import json
 
 from paths import *
-
+from data_structs import Track
 
 def _load_clean_genres():
     """Auxiliary function to load the file with the clean genre list and
@@ -48,3 +49,15 @@ def tag_to_genre(tag, clean_genres):
             if dl_distance <= 1:
                 return genre
     return None
+
+
+def json_line_to_track(line):
+    """Converts a json line to an appropriate Track object
+    """
+    track_dct = json.loads(line)
+    # Clean up word count dictionary
+    wc_dct = {}
+    for word_id, word_count in track_dct['wordcount'].iteritems():
+        wc_dct[int(word_id)] = int(word_count)
+    track = Track(track_dct['id'], track_dct['genres'], wc_dct)
+    return track

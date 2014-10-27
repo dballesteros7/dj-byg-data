@@ -10,3 +10,5 @@ MXM_DB_PATH = os.path.join(DATA_DIR, 'mxm_dataset.db')
 GENRE_LIST_PATH = os.path.join(DATA_DIR, 'genres.yaml')
 
 OUTPUT_FILE = os.path.join(DATA_DIR, 'tag_track_data.txt')
+
+LSH_CLUSTER_FILE = os.path.join(DATA_DIR, 'lsh_cluster_file.txt')
