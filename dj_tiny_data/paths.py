@@ -10,3 +10,5 @@ MXM_DB_PATH = os.path.join(DATA_DIR, 'mxm_dataset.db')
 GENRE_LIST_PATH = os.path.join(DATA_DIR, 'genres.yaml')
 
 OUTPUT_FILE = os.path.join(DATA_DIR, 'tag_track_data.txt')
+TF_IDF_MATRIX_PATH = os.path.join(DATA_DIR, 'tf_idf_matrix.txt')
+WORD_LIST_PATH = os.path.join(DATA_DIR, 'word_list.txt')

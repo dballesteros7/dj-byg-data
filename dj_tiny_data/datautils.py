@@ -40,11 +40,11 @@ def tag_to_genre(tag, clean_genres):
         dl_distance = jellyfish.damerau_levenshtein_distance(
             search_genre, tag)
         if dl_distance <= 1:
-            return genre
+            return genre, None
         for subgenre in clean_genres[genre]:
             subgenre_search = subgenre.lower()
             dl_distance = jellyfish.damerau_levenshtein_distance(
                 subgenre_search, tag)
             if dl_distance <= 1:
-                return genre
-    return None
+                return genre, subgenre
+    return None, None

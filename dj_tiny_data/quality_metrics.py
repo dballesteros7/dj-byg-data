@@ -57,7 +57,7 @@ class QualityMetrics(object):
             track = data_structs.Track(**track_info)
             return track
 
-    def binary_genre_cluster_quality(self, cluster):
+    def absolute_genre_cluster_quality(self, cluster):
         """Evaluates a cluster and assigns it a binary judgment.
 
         A cluster is considered good when at least one genre is present in all
@@ -69,11 +69,9 @@ class QualityMetrics(object):
             A boolean value indicating whether the given cluster is good or bad
             for identifying genres.
         """
-        print 'CLUSTER ============================='
         intersecting_genres = set()
         for track_id in cluster:
             track = self.retrieve_track_genres(track_id)
-            print set(track.genres)
             intersecting_genres &= set(track.genres)
         return bool(intersecting_genres)
 
@@ -89,15 +87,27 @@ class QualityMetrics(object):
             A boolean indicating whether the given cluster is good or bad
             for identifying genres.
         """
-        print 'CLUSTER ==========================='
-        genres_count = defaultdict(int)
-        for track_id in cluster:
-            track = self.retrieve_track_genres(track_id)
-            print set(track.genres)
-            for genre in track.genres:
-                genres_count[genre] += 1
-        for genre in genres_count:
-            threshold = len(cluster) / 2 + 1
-            if genres_count[genre] > threshold:
+        for _, prob in self.genre_probabilities(cluster):
+            if prob > 0.5:
                 return True
         return False
+
+    def genre_probabilities(self, cluster):
+        """Estimates the probability of genres inside the cluster.
+
+        This uses a ML estimator to determine how likely is each genre
+        present in the cluster's tracks to identify the cluster as whole.
+
+        Args:
+            cluster: Set of track IDs that belong to the cluster.
+        Returns:
+            Ordered list of pairs with each genre and their estimated
+            probability.
+        """
+        genres = defaultdict(float)
+        for track_id in cluster:
+            track = self.retrieve_track_genres(track_id)
+            for genre in track.genres:
+                genres[genre] += 1
+        sorted_genres = sorted(genres.items(), key=lambda x: x[1])
+        return map(lambda x: (x[0], x[1] / len(cluster)), sorted_genres)

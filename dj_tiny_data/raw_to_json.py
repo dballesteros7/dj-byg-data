@@ -38,7 +38,7 @@ def main():
             track_data = {
                 'id': None,
                 'wordcount': {},
-                'genres': set(),
+                'genres': set()
             }
             # 1. Get the track ID
             track_id, song_id, artist_name, song_title = line.split('<SEP>')
@@ -58,7 +58,7 @@ def main():
             tag_data = res.fetchall()
             # print tag_data
             for tag, score in tag_data:
-                genre = tag_to_genre(tag)
+                genre, subgenre = tag_to_genre(tag)
                 if genre is not None:
                     track_data['genres'].add(genre)
 
