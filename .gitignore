@@ -67,7 +67,8 @@ data/MillionSongSubset
 *.bak
 *.tks
 *.gz
-
+*.bbl
+*.blg
 # Sublime files
 *sublime-*
 

@@ -5,6 +5,8 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
+
+\bibliographystyle{acm}
   
 \author{Diego Ballesteros, Tracjhe Kralev, Tribhuvanesh Orekondy}
 \title{DJ Tini Data}
@@ -14,7 +16,33 @@
 \begin{document}
   \maketitle
   \section{Introduction}
-    \subsection{Goals}
+    The general aim of this project is to develop a system able to produce
+    information out of data extracted from songs. This is the general
+    aim of the research field known as Music Information Retrieval (MIR),
+    this field has been active for quite some time \cite{nameThatTune:1993}
+    and its applications can be seen in several commercial products such as
+    Pandora or Spotify \cite{recommendation:2010}.
+
+    A great portion of the activity in MIR deals with song meta-data and audio
+    features \cite{McFee:2012:MSD:2187980.2188222}. However, in this project we
+    focus on lyrics as the main source of data.
+    The main task that we pursue is to answer the following question:
+    
+    "Is it possible to determine the genre of a song based solely on its
+    lyrics?"
+     
+    In order to accomplish this, we first explored how to extract genre
+    information from the songs' lyrics and then evaluated the quality of the
+    judgments. Lastly we made the developed methods available as a web
+    application where arbitrary lyrics can be input in order to obtain
+    a genre prediction.
+    
+    The report is organized as follows, first we present the input datasets used
+    for the task and their respective pre-processing and manipulation. We then
+    proceed to briefly explain the computing and analysis techniques chosen for
+    the task. In the third section we present details of the implementation of
+    these techniques. Finally the obtained results and the performance of the
+    algorithms is discussed.
   \section{Data}
     \subsection{Description}
     \subsection{Preprocessing}
@@ -35,4 +63,5 @@
       \subsubsection{K-Means}
       \subsubsection{LSH}
     \subsection{Performance \& Scalability}
+  \bibliography{report_1}
 \end{document}
