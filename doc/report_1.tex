@@ -240,7 +240,7 @@
     We use the library NearPy to perform Locality Sensitive Hashing on our dataset.
     This option proved quite convenient, since the project is well-documented, active and provides an already optimised single-node implementation.
     
-    NearPy works as shown in Figure \ref{figure:ssh_pipeline}. 
+    NearPy works as shown in Figure \ref{figure:lsh_pipeline}. 
     Given an input vector, hashes are used to generate bucket keys to which the input hashes to.
     At query time, the vector is paired up with all the candidate vectors that's contained in the respective buckets.
     After the candidates have been collected, a distance metric (Euclidean in our case) is used to identify the nearest neighbours.
