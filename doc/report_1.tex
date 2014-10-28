@@ -5,6 +5,7 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{hyperref}
 
 \bibliographystyle{acm}
   
@@ -45,8 +46,46 @@
     algorithms is discussed.
   \section{Data}
     \subsection{Description}
-    \subsection{Preprocessing}
+    In order to carry out the previously stated task, we selected the Million
+    Songs Dataset (MSD) \cite{Bertin-Mahieux2011}.
+    This dataset is a free collection of audio features and metadata for a million
+    of tracks, it was collected by the LabROSA at Columbia University using
+    the EchoNest API
+    \footnote{A music intelligence platform - \url{http://the.echonest.com/}}.
+    
+    However, the main dataset contains only song metadata
+    (e.g. artist and album) and audio features which are not of interest
+    for this project. Fortunately, the dataset is accompanied by four companion
+    datasets:
+    
+    \begin{description}
+      \item[SecondHandSongs] List of cover songs within the MSD.
+      \item[Taste profile] User data from EchoNest for a subset of the MSD.
+      \item[musiXmatch] Lyrics for the songs in the MSD
+                        \footnote{Lyrics are available only in bag of word
+                                  representation due to copyright}.
+      \item[Last.fm] Tags and similarity information for songs in the MSD.
+    \end{description}
+    
+    Of interest for the current task are the last two datasets. The musiXmatch
+    dataset provides the lyrics needed for the analysis and the Last.fm tags can
+    be used to identify the genre of the songs.
+    
+    Summarizing, the data to be used is:
+    
+    \begin{itemize}
+      \item The main MSD, only the IDs are used. There are 1M in the
+            dataset and its uncompressed size is of about 280GB.
+      \item The musiXmatch dataset has lyrics for almost 240k songs from the
+            MSD. The reasons for the reduced size are: copyright, duplicates and
+            instrumental tracks.
+      \item The Last.fm dataset includes 94\% of the songs in the MSD, 50\% of
+            them have at least one tag.
+    \end{itemize}
+
     \subsection{Downscaling}
+
+    \subsection{Preprocessing}
   \section{Design}
     \subsection{Algorithms}
       \subsection{K-Means clustering}
