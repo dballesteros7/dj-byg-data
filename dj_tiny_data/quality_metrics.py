@@ -100,7 +100,7 @@ class QualityMetrics(object):
                 return True
         return False
 
-    def majority_genre_cluster_quality(self, cluster):
+    def majority_genre_cluster_quality(self, cluster, maj_prob=0.5):
         """Evaluates a cluster and assigns a binary judgment to it.
 
         A cluster is considered good when there is at least one genre that
@@ -113,7 +113,7 @@ class QualityMetrics(object):
             for identifying genres.
         """
         for _, prob in self.genre_probabilities(cluster):
-            if prob > 0.5:
+            if prob > maj_prob:
                 return True
         return False
 
