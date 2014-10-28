@@ -7,6 +7,8 @@ from paths import *
 from datautils import *
 from quality_metrics import QualityMetrics
 
+import time
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats, math
@@ -56,26 +58,32 @@ def evaluate():
     yhigh = []
     y_clus_size = []
     y_clus_num = []
+    timings = []
 
     for xi in np.arange(0.1, 1.1, 0.1):
         x += [xi, ]
         yi = []
+        timingsi = []
         for i in range(num_expt):
             rbp = RandomBinaryProjections('rbp', 10)
             lshashes = [rbp]
+            start_time = time.time()
             list_of_clusters = run_expt(lshashes)
+            tot_time = time.time() - start_time
             eval_res = [qm.majority_genre_cluster_quality(cluster, maj_prob=xi) for cluster in list_of_clusters]
             true_frac = eval_res.count(True) / float(len(eval_res))
             yi += [true_frac, ]
             y_clus_size += [len(cl) for cl in list_of_clusters]
             y_clus_num += [len(list_of_clusters), ]
+            timingsi += [tot_time, ]
 
-        # print "=" * 50
-        # print "=== ", "maj_prob = ", xi
-        # print "=" * 50
-        # print "Number of clusters = ", np.mean(y_clus_num)
-        # print "Average cluster size = ", np.mean(y_clus_size)
-        # print "Overlap fraction = ", np.mean(yi)
+        print "=" * 50
+        print "=== ", "maj_prob = ", xi
+        print "=" * 50
+        print "Number of clusters = ", np.mean(y_clus_num)
+        print "Average cluster size = ", np.mean(y_clus_size)
+        print "Overlap fraction = ", np.mean(yi)
+        print "Time taken = ", np.mean(timingsi)
         
         y += [np.mean(yi), ]
         l, h = mean_confidence_interval(yi)
