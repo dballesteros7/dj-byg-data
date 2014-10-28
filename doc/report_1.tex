@@ -5,6 +5,9 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{hyperref}
+
+\bibliographystyle{acm}
   
 \author{Diego Ballesteros, Tracjhe Kralev, Tribhuvanesh Orekondy}
 \title{DJ Tini Data}
@@ -14,11 +17,124 @@
 \begin{document}
   \maketitle
   \section{Introduction}
-    \subsection{Goals}
+    The general aim of this project is to develop a system able to produce
+    information out of data extracted from songs. This is the general
+    aim of the research field known as Music Information Retrieval (MIR),
+    this field has been active for quite some time \cite{nameThatTune:1993}
+    and its applications can be seen in several commercial products such as
+    Pandora or Spotify \cite{recommendation:2010}.
+
+    A great portion of the activity in MIR deals with song meta-data and audio
+    features \cite{McFee:2012:MSD:2187980.2188222}. However, in this project we
+    focus on lyrics as the main source of data.
+    The main task that we pursue is to answer the following question:
+    
+    "Is it possible to determine the genre of a song based solely on its
+    lyrics?"
+     
+    In order to accomplish this, we first explored how to extract genre
+    information from the songs' lyrics and then evaluated the quality of the
+    judgments. Lastly we made the developed methods available as a web
+    application where arbitrary lyrics can be input in order to obtain
+    a genre prediction.
+    
+    The report is organized as follows, first we present the input datasets used
+    for the task and their respective pre-processing and manipulation. We then
+    proceed to briefly explain the computing and analysis techniques chosen for
+    the task. In the third section we present details of the implementation of
+    these techniques. Finally the obtained results and the performance of the
+    algorithms is discussed.
   \section{Data}
-    \subsection{Description}
-    \subsection{Preprocessing}
+  
+    \subsection{Description} \label{sec:data:subsec:description}
+    In order to carry out the previously stated task, we selected the Million
+    Songs Dataset (MSD) \cite{Bertin-Mahieux2011}.
+    This dataset is a free collection of audio features and metadata for a million
+    of tracks, it was collected by the LabROSA at Columbia University using
+    the EchoNest API
+    \footnote{A music intelligence platform - \url{http://the.echonest.com/}}.
+    
+    However, the main dataset contains only song metadata
+    (e.g. artist and album) and audio features which are not of interest
+    for this project. Fortunately, the dataset is accompanied by four companion
+    datasets:
+    
+    \begin{description}
+      \item[SecondHandSongs] List of cover songs within the MSD.
+      \item[Taste profile] User data from EchoNest for a subset of the MSD.
+      \item[musiXmatch] Lyrics for the songs in the MSD
+                        \footnote{Lyrics are available only in bag of word
+                                  representation due to copyright.}.
+      \item[Last.fm] Tags and similarity information for songs in the MSD.
+    \end{description}
+    
+    Of interest for the current task are the last two datasets. The musiXmatch
+    dataset provides the lyrics needed for the analysis and the Last.fm tags can
+    be used to identify the genre of the songs.
+    
+    Summarizing, the data to be used is:
+    
+    \begin{itemize}
+      \item The main MSD, only the IDs are used. There are 1M in the
+            dataset and its uncompressed size is of about 280GB.
+      \item The musiXmatch dataset has lyrics for almost 240k songs from the
+            MSD. The reasons for the reduced size are: copyright, duplicates and
+            instrumental tracks.
+      \item The Last.fm dataset includes 94\% of the songs in the MSD, and in
+            total around 500k have at least one tag.
+    \end{itemize}
+
     \subsection{Downscaling}
+    For this first milestone, we were tasked with selecting subset that can
+    run in a single machine. In this case, the selection was straightforward
+    since there is a 10k randomly sampled subset available in the MSD website.
+    We considered this an appropriate size for the initial task.
+    
+    For the Last.fm dataset it was also possible to get the matching 10k
+    subset but for the musiXmatch we needed to download the whole dataset
+    with the 240k songs' lyrics.
+    
+    The sizes and formats of these subsets are listed in table
+    \ref{tab:size_subset}.
+
+    \begin{table}
+      \center
+      \caption{Sizes and formats for the data subsets}
+      \begin{tabular}{|c|c|c|}
+      \hline
+      Dataset & Format & Size (GB) \\
+      \hline
+      MSD & Text files & 2.6 \\
+      Last.fm & SQLite & 0.5 \\
+      musiXmatch (Full) & SQLite & 2.3 \\
+      \hline
+      \end{tabular}
+      \label{tab:size_subset}
+    \end{table}
+
+    \subsection{Preprocessing}
+      In order to have a consistent access to all the information per track,
+      we processed the input text files and SQLite databases and merged them
+      into a single text file where each line is a JSON object with the
+      track ID, its associated genres and the word frequencies for its
+      lyrics.
+      
+      Here it was necessary to filter out the tracks without any genre information
+      or less than 10 words in its lyrics, after this filtering the subset
+      shrank to 1.4k songs and in its JSON representation it had a size of 1.1MB.
+      
+      \subsubsection{Finding out genres}    
+        As mentioned in \ref{sec:data:subsec:description}, the Last.fm provides us
+        with human-made tags, these tags however contain all sorts of information
+        and are not focused on genres only. In order, to use these
+        as ground truth for the experiments we cleaned the tags by comparing
+        them against a comprehensive online list of genres
+        \footnote{\url{http://www.musicgenreslist.com/}}.
+        In order to capture possible misspellings we considered a tag equal to
+        a genre in the list if their Damerau-Levenshtein distance
+        \footnote{\url{http://en.wikipedia.org/wiki/Damerau-Levenshtein_distance}}
+        does not exceed 1.
+      
   \section{Design}
     \subsection{Algorithms}
       \subsection{K-Means clustering}
@@ -35,4 +151,5 @@
       \subsubsection{K-Means}
       \subsubsection{LSH}
     \subsection{Performance \& Scalability}
+  \bibliography{report_1}
 \end{document}

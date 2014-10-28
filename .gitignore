@@ -54,5 +54,22 @@ docs/_build/
 target/
 
 # Don't upload the datasets
-data/lastfm_subset
-*.zip
+data/*.txt
+data/*.db
+data/*.gz
+data/*.zip
+data/MillionSongSubset
+
+# LaTeX stuff
+*.aux
+*.pdf
+*.log
+*.bak
+*.tks
+*.gz
+*.bbl
+*.blg
+# Sublime files
+*sublime-*
+
+
