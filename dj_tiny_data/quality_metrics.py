@@ -162,3 +162,4 @@ class QualityMetrics(object):
             cluster_inertia=fitted_kmeans.inertia_,
             mean_cluster_inertia=fitted_kmeans.inertia_/len(self.track_list),
             genres_info=genres_info_str)
+        return float(n_good_clusters)/len(clusters)

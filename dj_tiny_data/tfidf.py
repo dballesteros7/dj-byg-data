@@ -34,7 +34,7 @@ def calculate_tf_idf_matrix(input_path=paths.OUTPUT_FILE,
         for word_id in track['wordcount']:
             tf = math.sqrt(int(track['wordcount'][word_id]))
             idf = 1 + math.log(float(len(track_list)) /
-                               (word_id_map[word_id]['doc_freq']))
+                               (word_id_map[word_id]['doc_freq'] + 1))
             row[word_id_map[word_id]['index']] = tf*idf
     normalize(tf_idf_dense, norm='l2', axis=1, copy=False)
     np.savetxt(output_path_matrix, tf_idf_dense, delimiter=',')

@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper,twoside]{scrartcl}
+\documentclass[10pt,a4paper]{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{amsmath}
@@ -6,8 +6,9 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage[cm]{fullpage}
 
-\bibliographystyle{acm}
+
   
 \author{Diego Ballesteros, Tracjhe Kralev, Tribhuvanesh Orekondy}
 \title{DJ Tini Data}
@@ -52,7 +53,7 @@
     This dataset is a free collection of audio features and metadata for a million
     of tracks, it was collected by the LabROSA at Columbia University using
     the EchoNest API
-    \footnote{A music intelligence platform - \url{http://the.echonest.com/}}.
+    \footnote{\url{http://the.echonest.com/}}.
     
     However, the main dataset contains only song metadata
     (e.g. artist and album) and audio features which are not of interest
@@ -123,7 +124,7 @@
       or less than 10 words in its lyrics, after this filtering the subset
       shrank to 1.4k songs and in its JSON representation it had a size of 1.1MB.
       
-      \subsubsection{Finding out genres}    
+      \subsubsection{Discovering genres in tags}    
         As mentioned in \ref{sec:data:subsec:description}, the Last.fm provides us
         with human-made tags, these tags however contain all sorts of information
         and are not focused on genres only. In order, to use these
@@ -132,24 +133,101 @@
         \footnote{\url{http://www.musicgenreslist.com/}}.
         In order to capture possible misspellings we considered a tag equal to
         a genre in the list if their Damerau-Levenshtein distance
-        \footnote{\url{http://en.wikipedia.org/wiki/Damerau-Levenshtein_distance}}
         does not exceed 1.
       
-  \section{Design}
+  \section{Design}  
     \subsection{Algorithms}
-      \subsection{K-Means clustering}
+      For this milestone we explore two approaches, namely clustering and
+      locality sensitive hashing.
+      \subsection{Clustering}
+        In order to classify a set of songs as belonging to one particular
+        genre, we chose the unsupervised learning technique of clustering
+        as one possible solution.
+        Our goal is to create a set of clusters covering the set of all songs
+        with lyrics and then using the clean genre tags determine the genres
+        that are the majority in each cluster.   
+        The intuition here is that if a genre is present in a 50\% majority
+        of the songs in cluster, then the songs can be classified as belonging
+        to that genre.
       \subsection{Locality Sensitive Hashing (LSH)}
     \subsection{Evaluation \& Metrics}
+      Clustering validation techniques usually rely on specific problem
+      knowledge as it is sometimes the case that the cluster metrics
+      that the algorithms minimize do not reflect on the quality of the
+      clusters when their information is processed by humans
+      \cite{halkidi2001clustering}. 
+      
+      In this particular task we made use of the cleaned genre tags to define a
+      metric that intuitively rates the quality of the cluster for genre       
+      prediction. This metric is defined as the ratio between the number of
+      clusters with at least genre that is present in more than 50\% of the
+      tracks in the cluster, and the total number of clusters. This
+      suggests the number of good clusters for identifying genres of
+      songs, and the goal is to have a high number of good clusters.
+      This metric is presented in equation \ref{eq:majority_metric}.
+      
+      \begin{equation}
+        \label{eq:majority_metric}
+        Q = \frac{\#good\ clusters}{\#clusters}
+      \end{equation}
+      
   \section{Implementation}
-    \subsection{K-Means clustering in a single machine}
-      \subsubsection{K-Means clustering in Hadoop}
+    This section describes the details of the implementation of the algorithms
+    outlined above. The code for this implementation was written in its majority
+    in python, along with some parts written in Javascript, HTML and CSS,
+    namely the web frontend.
+
+    \subsection{Clustering in a single machine}
+      In order to perform clustering in the input data, first it is necessary to
+      define a representation for the data and a distance metric in this
+      representation. Since we are dealing with lyrics, which are text documents
+      representing the songs, we decided that using a TF-IDF vector
+      representation is a sensible choice.
+      
+      The term frequency (TF) calculation and smoothed inverse document frequency
+      (IDF) are presented in equations \ref{eq:tf} and \ref{eq:idf},
+      respectively. Where $d$ represents a document and $t$ a term.
+      
+      \begin{equation}
+        \label{eq:tf}
+        tf(d, t) = \sqrt{count(d, t)}
+      \end{equation}
+     
+      \begin{equation}
+        \label{eq:idf}
+        idf(t) = 1 + \log{\frac{\#tracks}{\#tracks\ containing\ t + 1}}
+      \end{equation}
+      
+      Finally, the TF-IDF value is simply the product of the TF and IDF.
+      
+      After the vectors were calculated and normalized, they were stored in
+      a text file for further processing. The next step in the implementation
+      is the clustering itself.
+      
+      For the clustering we chose K-means since it is a well known algorithm
+      to approximate the optimal solution to the clustering problem
+      of minimizing the sum of the distances from each point to the closest
+      cluster center. We used scikit-learn
+      \footnote{\url{http://scikit-learn.org/}} implementation of K-means and
+      tuned the parameters to obtain the best results.
+
+      \subsubsection{Clustering in Hadoop}
+        This current approach runs well in a single machine with the current
+        subset of the data, as it will described in the results section,
+        however as we look forward to scale up the data size, it is necessary
+        to consider changes in the algorithm.
+        
+        One possible variation of the clustering algorithm that has a
+        straightforward implementation in a distributed computing environment,
+        such as Hadoop's MapReduce, is the use of coresets to do a weighted
+        sampling of the data before running a clustering algorithm on these
+        samples \cite{feldman2011scalable}.
     \subsection{LSH in a single machine}
       \subsubsection{LSH in Spark}
-    \subsection{Web Service}
   \section{Results}
     \subsection{Quality of results}
       \subsubsection{K-Means}
       \subsubsection{LSH}
-    \subsection{Performance \& Scalability}
+  \bibliographystyle{acm}
   \bibliography{report_1}
 \end{document}
