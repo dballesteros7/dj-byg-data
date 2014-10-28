@@ -6,6 +6,27 @@ import json
 from dj_tiny_data import data_structs, errors, paths
 
 
+K_MEANS_REPORT_TEMPLATE = """
+===============================================================================
+K-Means Quality Report
+===============================================================================
+Number of tracks clustered: {n_tracks}
+Number of clusters:         {n_clusters}
+
+===============================================================================
+Cluster with absolute genre:   {n_great_clusters} out of {n_clusters}
+Clusters with majority genres: {n_good_clusters} out of {n_clusters}
+Cluster inertia:               {cluster_inertia}
+Mean cluster distance (max is 2): {mean_cluster_inertia}
+
+Genres per cluster (where majority is present):
+{genres_info}
+===============================================================================
+"""
+CLUSTER_TEMPLATE = """Cluster {i_cluster} is of genre {genre} by majority."""
+NO_CLUSTER_TEMPLATE = """Cluster {i_cluster} has no majority genre."""
+
+
 class QualityMetrics(object):
     """Provides a set of methods that measure the quality of track clusters
     for the task of identifying music genres from lyrics.
@@ -15,6 +36,8 @@ class QualityMetrics(object):
                          each track.
         track_index: A dictionary that indexes the tracks in the text track
                      with the full track information.
+        track_list: A list with the ordered track IDs present in the track
+                    info file.
     """
 
     def __init__(self, track_info_path=None):
@@ -25,13 +48,16 @@ class QualityMetrics(object):
         location defined in the paths module.
         """
         self.track_index = {}
+        self.track_list = []
         self.track_info_path = track_info_path
         if self.track_info_path is None:
             self.track_info_path = paths.OUTPUT_FILE
         offset = 0
         with open(self.track_info_path, 'r') as track_info_file:
             for line in track_info_file:
-                self.track_index[json.loads(line)['id']] = offset
+                track_info = json.loads(line)
+                self.track_index[track_info['id']] = offset
+                self.track_list.append(track_info['id'])
                 offset += len(line)
 
     def retrieve_track_genres(self, track_id):
@@ -69,11 +95,10 @@ class QualityMetrics(object):
             A boolean value indicating whether the given cluster is good or bad
             for identifying genres.
         """
-        intersecting_genres = set()
-        for track_id in cluster:
-            track = self.retrieve_track_genres(track_id)
-            intersecting_genres &= set(track.genres)
-        return bool(intersecting_genres)
+        for _, prob in self.genre_probabilities(cluster):
+            if prob == 1.0:
+                return True
+        return False
 
     def majority_genre_cluster_quality(self, cluster):
         """Evaluates a cluster and assigns a binary judgment to it.
@@ -111,3 +136,29 @@ class QualityMetrics(object):
                 genres[genre] += 1
         sorted_genres = sorted(genres.items(), key=lambda x: x[1])
         return map(lambda x: (x[0], x[1] / len(cluster)), sorted_genres)
+
+    def evaluate_kmeans(self, fitted_kmeans):
+        """Evaluate a full run of K-means and print out a quality report."""
+        clusters = defaultdict(list)
+        for track_id, label in zip(self.track_list, fitted_kmeans.labels_):
+            clusters[label].append(track_id)
+        n_good_clusters = 0
+        n_great_clusters = 0
+        genres_info = []
+        for label in clusters:
+            if self.majority_genre_cluster_quality(clusters[label]):
+                n_good_clusters += 1
+                genres_info.append(CLUSTER_TEMPLATE.format(
+                    i_cluster=label,
+                    genre=self.genre_probabilities(clusters[label])[-1]))
+                if self.absolute_genre_cluster_quality(clusters[label]):
+                    n_great_clusters += 1
+            else:
+                genres_info.append(NO_CLUSTER_TEMPLATE.format(i_cluster=label))
+        genres_info_str = '\n'.join(genres_info)
+        print K_MEANS_REPORT_TEMPLATE.format(
+            n_tracks=len(self.track_list), n_clusters=len(clusters),
+            n_good_clusters=n_good_clusters, n_great_clusters=n_great_clusters,
+            cluster_inertia=fitted_kmeans.inertia_,
+            mean_cluster_inertia=fitted_kmeans.inertia_/len(self.track_list),
+            genres_info=genres_info_str)
