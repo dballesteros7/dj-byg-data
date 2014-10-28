@@ -2,7 +2,7 @@ import sys
 
 import matplotlib.pyplot as plt
 
-from dj_tiny_data import kmeans, paths, quality_metrics, tfidf
+from dj_tiny_data import paths
 
 
 def main():
@@ -20,15 +20,17 @@ def main():
             n, q = map(float, line.strip().split(',', 1))
             n_list.append(n)
             q_list.append(q)
-        plt.xlim(xmin=0.0)
-        plt.ylim(ymin=0.0)
+        print n_list
+        print q_list
 
-        plt.plot(n_list, q_list, 'o-')
-
-        plt.xlabel('Overlap probability')
-        plt.ylabel('Fraction of clusters')
-        plt.title('Fraction of detected clusters with overlapping majority genre')
+        plt.plot(n_list, q_list, '-o')
+        plt.xlim(xmin=5.0)
+        plt.ylim(ymin=0.5)
+        plt.xlabel('Number of clusters')
+        plt.ylabel('Fraction of good clusters')
+        plt.title('Fraction of good clusters for various k')
         plt.grid()
+        plt.show()
         plt.savefig('test.png')
 
 

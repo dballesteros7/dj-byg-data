@@ -10,7 +10,7 @@
 
 
   
-\author{Diego Ballesteros, Tracjhe Kralev, Tribhuvanesh Orekondy}
+\author{Diego Ballesteros, Trajche Kralev, Tribhuvanesh Orekondy}
 \title{DJ Tini Data}
 \subtitle{The small scale implementation of DJ Byg Data}
 \date{\today}
@@ -99,7 +99,7 @@
     \ref{tab:size_subset}.
 
     \begin{table}
-      \center
+      \centering
       \caption{Sizes and formats for the data subsets}
       \begin{tabular}{|c|c|c|}
       \hline
@@ -150,6 +150,21 @@
         of the songs in cluster, then the songs can be classified as belonging
         to that genre.
       \subsection{Locality Sensitive Hashing (LSH)}
+      Locality Sensitive Hashing is a popular technique used to solve the 
+      Nearest Neighbour problem in extremely high dimensional spaces.
+      Given that we too deal with finding clusters, or similar neighbours of
+      songs in a 5000-dimensional space, we consider applying LSH to solve
+      our problem.
+      
+      The intuition behind LSH is that similar items are hashed to the
+      same bucket.
+      Hence by looking at the buckets, we can detect collisions, or in our case,
+      a cluster of songs that share similar vocabulary.
+      
+      In contrast to k-means clustering, LSH can be implemented by making a
+      single pass over the data.
+      This in turn will help us later analyze whether k-means is worth the
+      computational overhead.
     \subsection{Evaluation \& Metrics}
       Clustering validation techniques usually rely on specific problem
       knowledge as it is sometimes the case that the cluster metrics
@@ -211,7 +226,7 @@
       \footnote{\url{http://scikit-learn.org/}} implementation of K-means and
       tuned the parameters to obtain the best results.
 
-      \subsubsection{Clustering in Hadoop}
+      \subsubsection{Clustering on Hadoop}
       \label{sec:implementation:subsec:hadoop}
         This current approach runs well in a single machine with the current
         subset of the data, as it will described in the results section,
@@ -224,12 +239,90 @@
         sampling of the data before running a clustering algorithm on these
         samples \cite{feldman2011scalable}.
     \subsection{LSH in a single machine}
-      \subsubsection{LSH in Spark} \label{sec:implementation:subsec:spark}
+      \begin{figure}[htbp]
+ 	      \centering
+	      \includegraphics[scale=0.4]{img/lsh_pipeline.png}
+ 	      \caption{NearPy's LSH pipeline (Taken from \url{www.nearpy.io})}
+	      \label{figure:lsh_pipeline}
+      \end{figure}
+      
+      We use the library NearPy to perform Locality Sensitive Hashing on our
+      dataset.
+      This option proved quite convenient, since the project is well-documented,
+      active and provides an already optimised single-node implementation.
+    
+      NearPy works as shown in Figure \ref{figure:lsh_pipeline}. 
+      Given an input vector, hashes are used to generate bucket keys to which
+      the input hashes to.
+      At query time, the vector is paired up with all the candidate vectors
+      that's contained in the respective buckets.
+      After the candidates have been collected, a distance metric
+      (Euclidean in our case) is used to identify the nearest neighbours.
+    
+      In our implementation of LSH, we make two passes over the dataset.
+      First pass to hash the vectors to their respective buckets.
+      Followed by a second pass, where each track acts as a query and
+      identifies the nearest neighbours.
+      The query vector and the neighbours are then treated as a single cluster.
+  
+      \subsubsection{LSH on Spark} \label{sec:implementation:subsec:spark}
+        Apache Spark's MLLib does not provide LSH out-of-the-box.
+        This is complicated by the fact that NearPy's implementation does
+        not scale to multiple machines, although the algorithm is
+        inherently scalable.
+        Hence, we intend to develop our own simplified version of LSH using
+        Python for the next milestone.
+
   \section{Results}
     \subsection{Quality metrics}
       \subsubsection{K-Means}
-        First, we attempted to find the optimal number of clusters
+        \begin{figure}[htbp]
+ 	        \centering
+	        \includegraphics[scale=0.45]{img/k_means_good.png}
+ 	        \caption{Fraction of majority clusters as the number of clusters
+ 	                 increases.}
+	        \label{figure:k_means}
+	     \end{figure}
+	      
+	      Figure \ref{figure:k_means} shows the effect of the number of clusters
+	      in the quality metric established for the clustering model. As expected,
+	      increasing the number of clusters does not necessarily mean an increase
+	      in the quality of the solution for the problem although it does
+	      decrease the objective function.
+	      
+	      Looking at the generated clusters and their majority genres, we were
+	      able to observe that the cluster system is able to distinguish between
+	      4 major genres: Latin, World, Hip-Hop and Rock, however most of the
+	      clusters are labeled as Rock. We think this is due to two factors,
+	      firstly because of the quality of the tags,
+	      since most of them map to the Rock genre,
+	      secondly because the clustering is only distinguishing
+	      between widely varying vocabularies, namely Spanish words for Latin,
+	      other non-English words for World, slang for Hip-Hop and the rest is
+	      identified as Rock.
+	      
+	      We expect that as the data size increases, it will be possible to
+	      identify smaller clusters belonging to other genres and have a better
+	      quality.
+      
       \subsubsection{LSH}
+        \begin{figure}[htbp]
+ 	        \centering
+	        \includegraphics[scale=0.5]{img/lsh_maj_prob.png}
+ 	        \caption{Majority genre cluster quality vs. fraction of cluster
+ 	                 adhering to the majority genre. The graph was obtained over 
+ 	                 a series of 10 experiments, with varying hash functions.}
+	        \label{figure:lsh_res}
+        \end{figure}
+        
+      Figure \ref{figure:lsh_res} summarizes the accuracy of LSH to detect
+      genres based on lyrics.
+      The y-axis denotes our quality metric majority genre cluster quality,
+      which expressed what fraction of the cluster adhere to the majority
+      genre exhibited by that cluster.
+      In other words, if the overlap probability is 0.5, it implies that at
+      least half of the tracks have a genre in common.
+
     \subsection{Performance}
       With the size of the current dataset, the single machine algorithms
       described in the implementation section were sufficient. Most of the
@@ -250,6 +343,7 @@
       On the other hand even though LSH has a linear running time
       it can be easily adapted to a parallel implementation
       thus benefiting greatly from a distributed computing environment.
+      
   \bibliographystyle{acm}
   \bibliography{report_1}
 \end{document}
