@@ -1,8 +1,15 @@
 NearPy==0.1.2
 PyYAML==3.11
 jellyfish==0.3.2
+matplotlib==1.4.2
+mock==1.0.1
+nose==1.3.4
 numpy==1.9.0
+pyparsing==2.0.3
+python-dateutil==2.2
+pytz==2014.7
 redis==2.10.3
 scikit-learn==0.15.2
 scipy==0.14.0
+six==1.8.0
 wsgiref==0.1.2

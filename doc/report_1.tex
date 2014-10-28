@@ -212,6 +212,7 @@
       tuned the parameters to obtain the best results.
 
       \subsubsection{Clustering in Hadoop}
+      \label{sec:implementation:subsec:hadoop}
         This current approach runs well in a single machine with the current
         subset of the data, as it will described in the results section,
         however as we look forward to scale up the data size, it is necessary
@@ -223,11 +224,32 @@
         sampling of the data before running a clustering algorithm on these
         samples \cite{feldman2011scalable}.
     \subsection{LSH in a single machine}
-      \subsubsection{LSH in Spark}
+      \subsubsection{LSH in Spark} \label{sec:implementation:subsec:spark}
   \section{Results}
-    \subsection{Quality of results}
+    \subsection{Quality metrics}
       \subsubsection{K-Means}
+        First, we attempted to find the optimal number of clusters
       \subsubsection{LSH}
+    \subsection{Performance}
+      With the size of the current dataset, the single machine algorithms
+      described in the implementation section were sufficient. Most of the
+      running times were in the order of seconds or minutes at the most.
+      
+      Moreover, after the experimentation phase was done and the optimal
+      parameters for clustering were selected, running a set of K-means
+      iterations yield a set of cluster centers which can be used to answer
+      web queries in real time since the calculation is linear on the number
+      of clusters which does not scale with the data, making it effectively
+      $O(1)$.
+      
+      In order to scale this up to a larger dataset, the algorithm
+      implementations must be changed according to the guidelines mentioned
+      in sections \ref{sec:implementation:subsec:hadoop} and
+      \ref{sec:implementation:subsec:spark}. This is needed because
+      k-means runs on quadratic time and therefore does not scale vertically.
+      On the other hand even though LSH has a linear running time
+      it can be easily adapted to a parallel implementation
+      thus benefiting greatly from a distributed computing environment.
   \bibliographystyle{acm}
   \bibliography{report_1}
 \end{document}
