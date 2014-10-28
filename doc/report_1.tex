@@ -150,6 +150,14 @@
         of the songs in cluster, then the songs can be classified as belonging
         to that genre.
       \subsection{Locality Sensitive Hashing (LSH)}
+      Locality Sensitive Hashing is a popular technique used to solve the Nearest Neighbour problem in extremely high dimensional spaces.
+      Given that we too deal with finding clusters, or similar neighbours of songs in a 5000-dimensional space, we consider applying LSH to solve our problem.
+      
+      The intuition behind LSH is that similar items are hashed to the same bucket.
+      Hence by looking at the buckets, we can detect collisions, or in our case, a cluster of songs that share similar vocabulary.
+      
+      In contrast to k-means clustering, LSH can be implemented by making a single pass over the data.
+      This in turn will help us later analyse whether k-means is worth the computational overhead.
     \subsection{Evaluation \& Metrics}
       Clustering validation techniques usually rely on specific problem
       knowledge as it is sometimes the case that the cluster metrics
@@ -223,11 +231,42 @@
         sampling of the data before running a clustering algorithm on these
         samples \cite{feldman2011scalable}.
     \subsection{LSH in a single machine}
-      \subsubsection{LSH in Spark}
+    \begin{figure}[htbp]
+ 	\centering
+	 \includegraphics[scale=0.4]{img/lsh_pipeline.png}
+ 	\caption{NearPy's LSH pipeline (source: www.nearpy.io)}
+	 \label{figure:lsh_pipeline}
+      \end{figure}
+    We use the library NearPy to perform Locality Sensitive Hashing on our dataset.
+    This option proved quite convenient, since the project is well-documented, active and provides an already optimised single-node implementation.
+    
+    NearPy works as shown in Figure \ref{figure:ssh_pipeline}. 
+    Given an input vector, hashes are used to generate bucket keys to which the input hashes to.
+    At query time, the vector is paired up with all the candidate vectors that's contained in the respective buckets.
+    After the candidates have been collected, a distance metric (Euclidean in our case) is used to identify the nearest neighbours.
+    
+    In our implementation of LSH, we make two passes over the dataset.
+    First pass to hash the vectors to their respective buckets.
+    Followed by a second pass, where each track acts as a query and identifies the nearest neighbours.
+    The query vector and the neighbours are then treated as a single cluster.
+      \subsubsection{LSH on Spark}
+      Apache Spark's MLLib does not provide LSH out-of-the-box.
+      This is complicated by the fact that NearPy's implementation does not scale to multiple machines, although the algorithm is inherently scalable.
+      Hence, we intend to develop our own simplified version of LSH using Python for the next milestone.
   \section{Results}
     \subsection{Quality of results}
       \subsubsection{K-Means}
       \subsubsection{LSH}
+      \begin{figure}[htbp]
+ 	\centering
+	 \includegraphics[scale=0.5]{img/lsh_maj_prob.png}
+ 	\caption{Majority genre cluster quality vs. fraction of cluster adhering to the majority genre. The graph was obtained over a series of 10 experiments, with varying hash functions.}
+	 \label{figure:lsh_res}
+      \end{figure}
+	 
+      Figure \ref{figure:lsh_res} summarizes the accuracy of LSH to detect genres based on lyrics.
+      The y-axis denotes our quality metric majority genre cluster quality, which expressed what fraction of the cluster adhere to the majority genre exhibited by that cluster.
+      In other words, if the overlap probability is 0.5, it implies that at least half of the tracks have a genre in common.
   \bibliographystyle{acm}
   \bibliography{report_1}
 \end{document}
