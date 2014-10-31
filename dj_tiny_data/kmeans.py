@@ -8,7 +8,7 @@ from dj_tiny_data import paths
 
 def k_means(input_matrix_path=paths.TF_IDF_MATRIX_PATH,
             **kwargs):
-    kwargs.setdefault('tol', 1e-6)
+    kwargs.setdefault('tol', 1e-4)
     kwargs.setdefault('n_init', 5)
     kwargs.setdefault('max_iter', 500)
     kwargs.setdefault('n_clusters', 100)

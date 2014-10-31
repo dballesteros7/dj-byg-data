@@ -15,3 +15,5 @@ WORD_LIST_PATH = os.path.join(DATA_DIR, 'word_list.txt')
 LSH_CLUSTER_FILE = os.path.join(DATA_DIR, 'lsh_cluster_file.txt')
 
 K_MEANS_PERF_PATH = os.path.join(DATA_DIR, 'kmeans_perf.txt')
+K_MEANS_CLUSTERS = os.path.join(DATA_DIR, 'kmeans_centers.txt')
+CLUSTER_GENRES = os.path.join(DATA_DIR, 'kmeans_genres.txt')

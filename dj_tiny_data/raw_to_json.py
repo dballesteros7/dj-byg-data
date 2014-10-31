@@ -72,7 +72,7 @@ def main():
                                       # (word_id, word, word_count)
             # print wc_data
             for word_id, word, word_count in wc_data:
-                track_data['wordcount'][word_id] = word_count
+                track_data['wordcount'][word] = word_count
 
             # print track_data
 

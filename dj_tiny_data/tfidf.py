@@ -2,6 +2,7 @@
 TF-IDF sparse matrix.
 """
 from collections import OrderedDict
+import codecs
 import math
 import json
 
@@ -38,5 +39,7 @@ def calculate_tf_idf_matrix(input_path=paths.OUTPUT_FILE,
             row[word_id_map[word_id]['index']] = tf*idf
     normalize(tf_idf_dense, norm='l2', axis=1, copy=False)
     np.savetxt(output_path_matrix, tf_idf_dense, delimiter=',')
-    with open(output_path_word_list, 'w') as foutput:
-        foutput.write('\n'.join(word_id_map.keys()))
+    foutput = codecs.open(output_path_word_list, 'w', 'utf-8')
+    for word_id in word_id_map:
+        foutput.write('%s,%s\n' % (word_id, word_id_map[word_id]['doc_freq']))
+    foutput.close()
