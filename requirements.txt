@@ -5,6 +5,7 @@ NearPy==0.1.2
 Pillow==2.6.1
 PyYAML==3.11
 Werkzeug==0.9.6
+boto==2.34.0
 itsdangerous==0.24
 jellyfish==0.3.2
 mock==1.0.1

@@ -73,4 +73,5 @@ data/MillionSongSubset
 # Sublime files
 *sublime-*
 
-
+# local env
+env.sh
