@@ -39,9 +39,9 @@ def main():
     if current_key is not None:
         inverse_document_freq = idf(document_frequency)
         for doc_id in term_frequencies:
-            print '%s,%s,%f, %f' % (doc_id, current_key,
-                                inverse_document_freq,
-                                tf(term_frequencies[doc_id]))
+            print '%s,%s,%f,%f' % (doc_id, current_key,
+                                   inverse_document_freq,
+                                   tf(term_frequencies[doc_id]))
 
 if __name__ == '__main__':
     sys.exit(main())
