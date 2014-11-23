@@ -22,6 +22,8 @@ object ClusterApp {
         case _             => throw new IllegalArgumentException("Invalid argument: " + arg)
       }
     }.toMap
+    
+    println(options)
 
     /**
      * Configure parameters
@@ -32,19 +34,31 @@ object ClusterApp {
     val awsSecretKey: String = staticConfig.getString("aws-config.AWS_SECRET_ACCESS_KEY")
     // Data related parameters
     val bucketName: String = "dj-byg-data"
-    val dataPath: String = options.getOrElse("datapath", "demo-output/part-00000")
+    val dataPath: String = options.getOrElse("datapath", "output-2/part-00000")
     val clusterAssignmentOutputPath: String = "bygcluster-output/cluster-assignment-out-%d".format(System.currentTimeMillis())
+    val clusterCentersOutputPath: String = "bygcluster-output/cluster-center-out-%d".format(System.currentTimeMillis())
     // Data Partitioning related parameters
-    val enableCustomPartitioning: Boolean = options.getOrElse("-part", "false").toBoolean
-    val minParts: Int = options.getOrElse("-minparts", "8").toInt
+    val enableCustomPartitioning: Boolean = options.getOrElse("part", "false").toBoolean
+    val minParts: Int = options.getOrElse("minparts", "8").toInt
     // Clustering related parameters
     val numClusters: Int = options.getOrElse("k", "10").toInt
-    val numIterations: Int = options.getOrElse("iters", "10").toInt
+    val numIterations: Int = options.getOrElse("iters", "2").toInt
+    
+    println("---------------- Running with the following configuration ----------------")
+    println("bucketName = " + bucketName)
+    println("dataPath = " + dataPath)
+    
+    println("enableCustomPartitioning = " + enableCustomPartitioning)
+    println("minParts = " + minParts)
+    
+    println("numClusters = " + numClusters)
+    println("numIterations = " + numIterations)
+    println("--------------------------------------------------------------------------")
 
     /**
      * Setup Spark
      */
-    val conf = new SparkConf().setAppName("DJ Byg Cluster").setMaster("local")
+    val conf = new SparkConf().setAppName("DJ Byg Cluster")
     val sc = new SparkContext(conf)
     val hadoopConf = sc.hadoopConfiguration
     hadoopConf.set("fs.s3n.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
@@ -101,6 +115,9 @@ object ClusterApp {
 
     // Cluster Centers
     val clusterCenters = clusters.clusterCenters
+    val clusterCentersRDD = sc.parallelize(clusterCenters)
+    // Write Cluster Centers to RDD
+    clusterCentersRDD.saveAsTextFile("s3n://%s/%s".format(bucketName, clusterCentersOutputPath))
 
     /**
      * Push to DynamoDB
