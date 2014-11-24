@@ -29,14 +29,15 @@ similar_artists = Table(
     Column('artist_id_a', ForeignKey('artists.artist_id'), primary_key=True),
     Column('artist_id_b', ForeignKey('artists.artist_id'), primary_key=True))
 
+terms = Table(
+    'terms', metadata,
+    Column('term_id', Integer, Sequence('term_id_seq'), primary_key=True),
+    Column('term', Text, nullable=False))
+
 artist_terms = Table(
     'artist_terms', metadata,
-    Column('term', String(500), primary_key=True))
-
-song_artist_terms = Table(
-    'song_artist_terms', metadata,
-    Column('track_id', ForeignKey('songs.track_id'), primary_key=True),
-    Column('term', ForeignKey('artist_terms.term'), primary_key=True))
+    Column('artist_id', ForeignKey('artists.artist_id'), primary_key=True),
+    Column('term_id', ForeignKey('terms.term_id'), primary_key=True))
 
 clusters = Table(
     'clusters', metadata,
@@ -47,6 +48,21 @@ clusters = Table(
 
 cluster_assignment = Table(
     'cluster_assignment', metadata,
-    Column('cluster_id', ForeignKey('clusters.cluster_id'), primary_key=True),
-    Column('track_id', ForeignKey('songs.track_id'), primary_key=True),
+    Column('cluster_id', ForeignKey('clusters.cluster_id'), primary_key=True,
+           index=True),
+    Column('track_id', ForeignKey('songs.track_id'), primary_key=True,
+           index=True),
     Column('distance', Float, nullable=False))
+
+stemmed_lyrics = Table(
+    'stemmed_lyrics', metadata,
+    Column('word_id', Integer, primary_key=True),
+    Column('word', String(500), nullable=False))
+
+word_counts = Table(
+    'word_counts', metadata,
+    Column('track_id', ForeignKey('songs.track_id'), nullable=False,
+           primary_key=True, index=True),
+    Column('word_id', ForeignKey('stemmed_lyrics.word_id'), nullable=False,
+           primary_key=True, index=True),
+    Column('count', Integer, nullable=False, default=0))
