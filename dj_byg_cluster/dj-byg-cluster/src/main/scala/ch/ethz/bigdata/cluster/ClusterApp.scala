@@ -18,11 +18,11 @@ object ClusterApp {
     val options: Map[String, String] = args.map { arg =>
       arg.dropWhile(_ == '-').split('=') match {
         case Array(opt, v) => (opt -> v)
-        case Array(opt)    => (opt -> "true")
-        case _             => throw new IllegalArgumentException("Invalid argument: " + arg)
+        case Array(opt) => (opt -> "true")
+        case _ => throw new IllegalArgumentException("Invalid argument: " + arg)
       }
     }.toMap
-    
+
     println(options)
 
     /**
@@ -43,14 +43,14 @@ object ClusterApp {
     // Clustering related parameters
     val numClusters: Int = options.getOrElse("k", "10").toInt
     val numIterations: Int = options.getOrElse("iters", "2").toInt
-    
+
     println("---------------- Running with the following configuration ----------------")
     println("bucketName = " + bucketName)
     println("dataPath = " + dataPath)
-    
+
     println("enableCustomPartitioning = " + enableCustomPartitioning)
     println("minParts = " + minParts)
-    
+
     println("numClusters = " + numClusters)
     println("numIterations = " + numIterations)
     println("--------------------------------------------------------------------------")
@@ -106,15 +106,21 @@ object ClusterApp {
      * Extract necessary data for representing output
      */
     // Cluster assignment
-    val clusterAssignment: RDD[(String, Int)] = alldata.map {
+    val clusterAssignment: RDD[String] = alldata.map {
       case (songID, vec) =>
         (songID, clusters.predict(vec))
+    }.map {
+      case (songID, clusterID) =>
+        "%s %d".format(songID, clusterID)
     }
     // Write this to S3
     clusterAssignment.saveAsTextFile("s3n://%s/%s".format(bucketName, clusterAssignmentOutputPath))
 
     // Cluster Centers
-    val clusterCenters = clusters.clusterCenters
+    val clusterCenters = clusters.clusterCenters.zipWithIndex.map { // Serialize to strings
+      case (vec, idx) =>
+        "%d %s".format(idx, vec.toArray.mkString(","))
+    }
     val clusterCentersRDD = sc.parallelize(clusterCenters)
     // Write Cluster Centers to RDD
     clusterCentersRDD.saveAsTextFile("s3n://%s/%s".format(bucketName, clusterCentersOutputPath))
