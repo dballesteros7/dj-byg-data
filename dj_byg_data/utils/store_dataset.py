@@ -20,7 +20,7 @@ def load_tracks_with_lyrics():
     return tracks_with_lyrics
 
 
-def main():
+def store_tracks_artists():
     db_conn = DBConnection()
     engine = db_conn.engine
     tracks_with_lyrics = load_tracks_with_lyrics()
@@ -74,5 +74,10 @@ def main():
         counter += 1
         offset += len(track_batch)
         track_batch = track_data.get_batch(limit=100000, offset=offset)
+
+
+def main():
+    store_tracks_artists()
+
 if __name__ == '__main__':
     sys.exit(main())

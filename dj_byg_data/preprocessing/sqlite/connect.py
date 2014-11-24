@@ -14,3 +14,8 @@ class DBConnection(object):
         if self._engine is None:
             self._create_engine()
         return self._engine
+
+    def format_dict(self, result_proxy):
+        labels = result_proxy.keys()
+        return [dict(zip(labels, result))
+                for result in result_proxy.fetchall()]
