@@ -5,6 +5,7 @@ from boto.s3.connection import Location
 from boto.s3.key import Key
 
 import numpy as np
+from scipy.spatial import distance
 
 import argparse, sys
 
@@ -12,6 +13,9 @@ from dj_byg_data.model.connect import DBConnection
 from dj_byg_data.model.schema import clusters, cluster_assignment
 
 S3_BUCKET = 'dj-byg-data'
+
+CENTER_CSV_OUT = '/tmp/center.csv'
+ASSIGNMENT_CSV_OUT = '/tmp/assgn.csv'
 
 
 def main():
@@ -33,74 +37,31 @@ def main():
         if outbucket.get_key(fold_key) is None:
             sys.exit('Key %s does not exist in bucket %s' % (key, S3_BUCKET))
 
-    # Get DB instance
-    db_conn = DBConnection()
-    engine = db_conn.engine
-
-    # Clear cluster_assignment and clusters table, for fresh inserts (Consider moving to upserts)
 
     # Get the list of all cluster-cluster_center mapping
     center_mapping = {}
-    for key in outbucket.list(cluster_center_key):
-        line = key.get_contents_as_string().strip()
-        if line != '':
-            _cid, _cvec = line.split(' ')[:2]
-            cid = int(_cid)
-            cvec = map(float, _cvec.split(','))
-            center_mapping[cid] = cvec
+    with open(CENTER_CSV_OUT, 'w') as fout:
+        for key in outbucket.list(cluster_center_key):
+            line = key.get_contents_as_string().strip()
+            if line != '':
+                _cid, _cvec = line.split(' ')
+                cid = int(_cid)
+                cvec = map(float, _cvec.split(','))
+                center_mapping[cid] = np.array(cvec)
+                fout.write('%d,"{%s}",%s\n' % (cid, _cvec, '5'))
 
-    print 'Beginning insert of cluster centers'
-    with engine.connect() as conn:
-        with conn.begin() as trans:
-            try:
-                for cid in center_mapping:
-                    c_dct = {}
-                    c_dct['cluster_id'] = cid
-                    c_dct['center'] = center_mapping[cid]
-                    c_dct['cluster_version'] = str(len(center_mapping)) # Currently, just use the # of clusters
+    with open(ASSIGNMENT_CSV_OUT, 'w') as fout:
+        for key in outbucket.list(cluster_assignment_key):
+            entries = key.get_contents_as_string()
 
-                    conn.execute(clusters.insert(), c_dct)
-            except:
-                trans.rollback()
-                raise
-            else:
-                trans.commit()
+            for _line in entries.split('\n'):
+                line = _line.strip()
+                if line != '':
+                    a_dct = {}
+                    song_id, _cid = line.split(' ')[:2]
+                    cid = int(_cid)
 
-    # Get the list of cluster assignments, and insert line by line
-    print 'Beginning insertion of cluster assignments'
-    insert = 0
-    batch_size = 10000
-    assignment_batch = []
-    with engine.connect() as conn:
-        with conn.begin() as trans:
-            try:
-                for key in outbucket.list(cluster_assignment_key):
-                    entries = key.get_contents_as_string()
-
-                    for _line in entries.split('\n'):
-                        line = _line.strip()
-                        if line != '':
-                            a_dct = {}
-                            song_id, _cid = line.split(' ')
-                            cid = int(_cid)
-
-                            a_dct['cluster_id'] = cid
-                            a_dct['track_id'] = song_id
-                            a_dct['distance'] = 0.0
-
-                            assignment_batch += [a_dct]
-                            insert += 1
-
-                            if (insert % batch_size) == 0:
-                                print 'Beginning insertion of %d assignments' % batch_size
-                                conn.execute(cluster_assignment.insert(), assignment_batch)
-                                assignment_batch = []
-                                print 'Inserted %d assignments' % batch_size
-            except:
-                trans.rollback()
-                raise
-            else:
-                trans.commit()
+                    fout.write('%d,%s,%f\n' % (cid, song_id, 0.0))
 
 
 if __name__ == '__main__':
