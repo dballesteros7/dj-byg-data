@@ -12,12 +12,19 @@ class TrackMetadata(DBConnection):
                 'AdditionalFiles', 'track_metadata.db'))
 
     def get_batch(self, limit=1000, offset=0):
-        conn = self.engine.connect()
-        result = conn.execute(
-            'SELECT * FROM songs LIMIT %d OFFSET %d' % (limit, offset))
-        return result.fetchall()
+        with self.engine.connect() as conn:
+            result = conn.execute("""
+                SELECT songs.* FROM songs
+                LIMIT %d OFFSET %d""" % (limit, offset))
+            return self.format_dict(result)
+
+    def format_dict(self, result_proxy):
+        labels = result_proxy.keys()
+        return [dict(zip(labels, result))
+                for result in result_proxy.fetchall()]
 
 if __name__ == '__main__':
     tracks = TrackMetadata()
     print tracks.get_batch()[-1]
     print tracks.get_batch(offset=1000)[-1]
+    print tracks.get_batch(offset=1000000)

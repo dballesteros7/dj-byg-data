@@ -22,6 +22,9 @@ class DBConnection(object):
     def deploy_schema(self):
         schema.metadata.create_all(bind=self.engine)
 
+    def destroy(self):
+        schema.metadata.drop_all(bind=self.engine)
+
 
 if __name__ == '__main__':
     dbconn = DBConnection()

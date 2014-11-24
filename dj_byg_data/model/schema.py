@@ -1,26 +1,27 @@
 from sqlalchemy import (MetaData, Table, Column, Integer, Sequence, String,
-                        ForeignKey, Float)
+                        ForeignKey, Float, Text)
 from sqlalchemy.dialects.postgresql import ARRAY
 
 metadata = MetaData()
 
 songs = Table(
     'songs', metadata,
-    Column('song_id', String(200), primary_key=True),
-    Column('title', String(200), nullable=False),
-    Column('release', String(200), nullable=False),
-    Column('artist_id', String(200), nullable=False, index=True),
-    Column('lastfm_tags', ARRAY(String(100)), nullable=False))
+    Column('track_id', String(100), primary_key=True),
+    Column('title', Text, nullable=False),
+    Column('release', Text, nullable=False),
+    Column('artist_id', String(100), nullable=False, index=True),
+    Column('year', Integer, nullable=False, index=True),
+    Column('lastfm_tags', ARRAY(Text), nullable=False))
 
 artists = Table(
     'artists', metadata,
-    Column('artist_id', String(200), primary_key=True),
-    Column('artist_name', String(200), nullable=False, index=True))
+    Column('artist_id', String(100), primary_key=True),
+    Column('artist_name', Text, nullable=False))
 
 similar_songs = Table(
     'similar_songs', metadata,
-    Column('song_id_a', ForeignKey('songs.song_id'), primary_key=True),
-    Column('song_id_b', ForeignKey('songs.song_id'), primary_key=True),
+    Column('track_id_a', ForeignKey('songs.track_id'), primary_key=True),
+    Column('track_id_b', ForeignKey('songs.track_id'), primary_key=True),
     Column('weight', Float, nullable=False, default=1.0))
 
 similar_artists = Table(
@@ -34,7 +35,7 @@ artist_terms = Table(
 
 song_artist_terms = Table(
     'song_artist_terms', metadata,
-    Column('song_id', ForeignKey('songs.song_id'), primary_key=True),
+    Column('track_id', ForeignKey('songs.track_id'), primary_key=True),
     Column('term', ForeignKey('artist_terms.term'), primary_key=True))
 
 clusters = Table(
@@ -47,5 +48,5 @@ clusters = Table(
 cluster_assignment = Table(
     'cluster_assignment', metadata,
     Column('cluster_id', ForeignKey('clusters.cluster_id'), primary_key=True),
-    Column('song_id', ForeignKey('songs.song_id'), primary_key=True),
+    Column('track_id', ForeignKey('songs.track_id'), primary_key=True),
     Column('distance', Float, nullable=False))

@@ -14,4 +14,3 @@ class DBConnection(object):
         if self._engine is None:
             self._create_engine()
         return self._engine
-
