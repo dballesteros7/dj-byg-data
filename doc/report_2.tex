@@ -245,11 +245,31 @@
   scalability.
   
   \subsection{Compute}
+ 
+  % What does the compute step do
+  The compute step involves running the k-means algorithm for clustering.
+  As input, it reads the TF-IDF vectors of all songs from S3.
+  This in turn produces a list of cluster assignments and cluster centres which is 
+  once again placed on to S3.
   
-  The computation of clusters from the data is done by reading the resulting
-  TF-IDF vectors from the MapReduce's output in S3. 
+  % How it does it
+  This step is implemented using Apache Spark's k-means$||$ algorithm.
+  More specifically, it's a variant which uses an initialisation technique similar to k-means++,
+  but which can executed in parallel.
   
-  TODO: Please write how Spark scales with the data here. Probably same argument, that if the data size grows then you just put more machines to do the calculation.
+  % Scaling benefits
+  The performance benefits of running it on a Spark cluster was massive.
+  The same code which took an hour to run on a local machine using 10\% of the dataset,
+  took about 10 mins on a cluster with 8 large EC2 slave nodes for the complete dataset.
+  This speed-up was for multiple reasons.
+  For one, on a single machine, the data failed to fit in the memory.
+  This was exacerbated by the fact that only 25\% of the dataset was cached in-memory and
+  the remaining 75\% was read each time from S3, during each stage.
+  We noticed reads of upto 500 MB in each stage.
+  In contrast, when this was executed in a distributed environment, the data was partitioned on
+  the worker nodes such that each worker node had access to a part of data locally.
+  As a result, the entire dataset was cached in the cluster and we noticed reads of only
+  6-7 MB per stage.
   
   \subsection{Interface}
   
