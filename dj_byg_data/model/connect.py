@@ -25,6 +25,11 @@ class DBConnection(object):
     def destroy(self):
         schema.metadata.drop_all(bind=self.engine)
 
+    def format_dict(self, result_proxy):
+        labels = result_proxy.keys()
+        return [dict(zip(labels, result))
+                for result in result_proxy.fetchall()]
+
 
 if __name__ == '__main__':
     dbconn = DBConnection()
