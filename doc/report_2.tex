@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper]{scrartcl}
+\documentclass[10pt,a4paper]{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{amsmath}
@@ -6,6 +6,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{booktabs}
 \usepackage[cm]{fullpage}
 \usepackage{tablefootnote}
 
@@ -158,15 +159,16 @@
     In the first step, the document frequencies for all terms were calculated. In
     order to do this, the word id was set as the map's output key and then
     it was possible to calculate the document frequencies in the reducers.
-    The reducers also computed the TF and IDF values according to equations
-    \ref{eq:tf} and \ref{eq:idf} respectively.
+    The reducers also computed the TF and IDF values.
+    %according to equations
+    %\ref{eq:tf} and \ref{eq:idf} respectively.
     
-    \begin{eqnarray}
-      \label{eq:tf}
-      tf = \sqrt{word\_count}\\
-      \label{eq:idf}
-      idf = \log{\left(\frac{corpus\_size}{doc\_freq + 1}\right)} + 1
-    \end{eqnarray}
+%    \begin{eqnarray}
+%      \label{eq:tf}
+%      tf = \sqrt{word\_count}\\
+%      \label{eq:idf}
+%      idf = \log{\left(\frac{corpus\_size}{doc\_freq + 1}\right)} + 1
+%    \end{eqnarray}
     
     In the second step the mapper simply streamed the input data with the track
     id as the key. Therefore it was possible to build the TF-IDF vectors in the
@@ -285,7 +287,103 @@
   database. This has no hard limit on the computation side, and only
   would require considerations on the financial cost.
   
-  \section{Results}
+  \section{Experiments}
+  Experiments were conducted using by varying two parameters - a) $k$, the number
+  of clusters and b) $r$, the number of top-most occurring words in the lyrics.
+  
+  This section has been kept quite succinct due to the limited space available.
+  We intend to explain each of the following results in much more detail in the next report.
+  
+  \subsection{Metrics}
+  We evaluated our algorithm using four evaluation methods:
+  \begin{enumerate}
+  \item \textbf{Skewness of cluster sizes}. This measures how uniformly the songs are distributed among the clusters
+  \item \textbf{Similar Songs}. The Last.fm dataset includes a list of similar songs pairs, and this is used to measure how such pairs were contained within a cluster.
+  \item \textbf{Similar Artists}. Similar to the above metrics, except we take into account similar artist pairs.
+  \item \textbf{Artists spread among clusters}, which measures how unique artists are for each cluster.
+  \end{enumerate}
+    
+  \subsection{Results}
+  We initially performed parameter exploration by setting $k$ to 5 to 20.
+  This however did not yield good results, since the cluster sizes were extremely skewed.
+  (In case of $k$ = 5, we noticed sizes of 198k, 39.5k, 2, 2 and 2.)
+  This seemed to be a sign of using commonly occurring words into our feature vector.
+  Hence, we proceeded to use another parameter $r$, which denotes the number of the most common words dropped from the feature vector.
+  Using $r$ = 100, we obtained better results in terms of our metrics.
+  
+  The results obtained by using metrics 1, 2 and 4 are displayed in Tables \ref{tab:song_dis}, \ref{tab:res} and \ref{tab:num_artists_clusters} respectively.
+  
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+Cluster ID & \# Songs \\ \midrule
+8           & 70770      \\
+4           & 50898      \\
+0           & 49324      \\
+7           & 25387      \\
+6           & 21078      \\
+2           & 7545       \\
+9           & 5967       \\
+1           & 4993       \\
+5           & 1697       \\
+3           & 3          \\ \bottomrule
+\end{tabular}
+\caption{Distribution of songs among various clusters}
+\label{tab:song_dis}
+\end{table}
+  
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+Cluster ID & Recall             & Precision            & F1 score             \\ \midrule
+0          & 0.317268888692571  & 0.00056390976856398  & 0.00112581852131951  \\
+1          & 0.628220537658721  & 0.00423589820620664  & 0.00841505627160403  \\
+2          & 0.0509420057673822 & 0.000558648814079117 & 0.00110517784055521  \\
+3          & 0.0                   & 0.0                     &  0.0                    \\
+4          & 0.369841836189631  & 0.000550576120332702 & 0.00109951541413113  \\
+5          & 0.291016021091057  & 0.00598308891384352  & 0.0117251174894903   \\
+6          & 0.829516889363635  & 0.00233533887959548  & 0.00465756531566462  \\
+7          & 0.157993201293643  & 0.000498471326359098 & 0.000993807173622106 \\
+8          & 0.438063048459549  & 0.000445161861024303 & 0.000889419889108439 \\
+9          & 0.788758779343296  & 0.00726203303553385  & 0.0143915641992848   \\ \bottomrule
+\end{tabular}
+\caption{Similar song results obtained with $k = 5$ and $r = 100$}
+\label{tab:res}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\# Clusters & \# Artists \\ \midrule
+1             & 8228         \\
+2             & 3838         \\
+4             & 3003         \\
+3             & 2922         \\
+5             & 2280         \\
+6             & 218          \\
+7             & 29           \\
+8             & 3            \\ \bottomrule
+\end{tabular}
+\caption{Uniqueness of artists to a cluster. For instance, this indicates that there exist 3 artists which appear in 8 clusters and 8228 artists that appear in only a single cluster}
+\label{tab:num_artists_clusters}
+\end{table}
+  
+  \subsection{So, can it detect genres?}
+  Surprisingly, it does.
+  We initially started off using the centroid of the clusters as being representative of the genres.
+  However, this did not yield such meaningful results.
+  One useful observation we did come across was that bad cluster centres, i.e, ones that have poor recall values, made use of extemely generic words.
+  
+  Cluster centroids need not however be representative of their songs.
+  So, we proceeded to look at the artists and artist-tags contained in each cluster.
+  This is where the pattern among clusters became clear.
+  Few clusters were representative of the language of the lyrics, such as German, Spanish, French and Nordic.
+  Furthermore, we also noticed clusters which were in English, and yet contained diverse genres.
+  Examples include one containing death metal and another a combination of rap and rock.
+  
   %\bibliographystyle{acm}
   %\bibliography{report_1}
 \end{document}
