@@ -7,7 +7,7 @@ from boto.s3.key import Key
 import numpy as np
 from scipy.spatial import distance
 
-import argparse, sys
+import argparse, sys, os
 
 from dj_byg_data.model.connect import DBConnection
 from dj_byg_data.model.schema import clusters, cluster_assignment
@@ -16,6 +16,7 @@ S3_BUCKET = 'dj-byg-data'
 
 CENTER_CSV_OUT = '/tmp/center.csv'
 ASSIGNMENT_CSV_OUT = '/tmp/assgn.csv'
+TEMP_SQL='/tmp/changes.sql'
 
 
 def main():
@@ -37,18 +38,20 @@ def main():
         if outbucket.get_key(fold_key) is None:
             sys.exit('Key %s does not exist in bucket %s' % (key, S3_BUCKET))
 
-
     # Get the list of all cluster-cluster_center mapping
     center_mapping = {}
     with open(CENTER_CSV_OUT, 'w') as fout:
         for key in outbucket.list(cluster_center_key):
-            line = key.get_contents_as_string().strip()
-            if line != '':
-                _cid, _cvec = line.split(' ')
-                cid = int(_cid)
-                cvec = map(float, _cvec.split(','))
-                center_mapping[cid] = np.array(cvec)
-                fout.write('%d,"{%s}",%s\n' % (cid, _cvec, '5'))
+            entries = key.get_contents_as_string()
+
+            for _line in entries.split('\n'):
+                line = _line.strip()
+                if line != '':
+                    _cid, _cvec = line.split(' ')
+                    cid = int(_cid)
+                    cvec = map(float, _cvec.split(','))
+                    center_mapping[cid] = np.array(cvec)
+                    fout.write('%d,"{%s}",%s\n' % (cid, _cvec, '5'))
 
     with open(ASSIGNMENT_CSV_OUT, 'w') as fout:
         for key in outbucket.list(cluster_assignment_key):
@@ -62,6 +65,16 @@ def main():
                     cid = int(_cid)
 
                     fout.write('%d,%s,%f\n' % (cid, song_id, 0.0))
+
+    # Dump commands to the .sql file and execute
+    with open(TEMP_SQL, 'w') as sqlf:
+        sqlf.write("delete from cluster_assignment;\n")
+        sqlf.write("delete from clusters;\n")
+        sqlf.write("\COPY clusters from %s DELIMITER ',' CSV;\n" % CENTER_CSV_OUT)
+        sqlf.write("\COPY cluster_assignment from %s DELIMITER ',' CSV;\n" % ASSIGNMENT_CSV_OUT)
+
+    # Set password through: export PGPASSWORD=xxx
+    os.system('psql --host=bygdata.coenedpltb6x.eu-west-1.rds.amazonaws.com --port=5432 --username=bygdata --dbname=bygdata -a -f %s' % TEMP_SQL)
 
 
 if __name__ == '__main__':

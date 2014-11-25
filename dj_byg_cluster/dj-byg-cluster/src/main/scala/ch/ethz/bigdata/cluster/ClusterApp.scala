@@ -13,6 +13,20 @@ import org.apache.spark.mllib.clustering.KMeans
 object ClusterApp {
   def main(args: Array[String]) {
     /**
+     * Some Helper functions
+     */
+    def euclideanDistance(x: Vector, y: Vector): Double = {
+      assert(x.size == y.size)
+
+      val dist =
+        for (i <- 0 until x.size) yield {
+          (x(i) - y(i)) * (x(i) - y(i))
+        }
+
+      Math.sqrt(dist.sum)
+    }
+
+    /**
      * Parse parameters
      */
     val options: Map[String, String] = args.map { arg =>
@@ -37,6 +51,8 @@ object ClusterApp {
     val dataPath: String = options.getOrElse("datapath", "output-2/part-00000")
     val clusterAssignmentOutputPath: String = "bygcluster-output/cluster-assignment-out-%d".format(System.currentTimeMillis())
     val clusterCentersOutputPath: String = "bygcluster-output/cluster-center-out-%d".format(System.currentTimeMillis())
+    // Pre-processing related parameters
+    val removeTopN: Int = options.getOrElse("remvtop", "0").toInt
     // Data Partitioning related parameters
     val enableCustomPartitioning: Boolean = options.getOrElse("part", "false").toBoolean
     val minParts: Int = options.getOrElse("minparts", "8").toInt
@@ -47,6 +63,8 @@ object ClusterApp {
     println("---------------- Running with the following configuration ----------------")
     println("bucketName = " + bucketName)
     println("dataPath = " + dataPath)
+
+    println("removeTopN = " + removeTopN)
 
     println("enableCustomPartitioning = " + enableCustomPartitioning)
     println("minParts = " + minParts)
@@ -82,7 +100,18 @@ object ClusterApp {
         case (songID, xline) =>
           (songID, xline.split(",").map(_.toDouble))
       }
-      .map {
+      .map { // Slice the array if required
+        case (songID, arr) =>
+          if (removeTopN == 0)
+            (songID, arr)
+          else {
+            val beginIdx = removeTopN
+            val lastIdx = arr.length
+            val slicedArr = arr.slice(beginIdx, lastIdx)
+            (songID, slicedArr)
+          }
+      }
+      .map { // Convert into a unit vector
         case (songID, arr) =>
           (songID, normalizer.transform(Vectors.dense(arr)))
       }
@@ -108,10 +137,10 @@ object ClusterApp {
     // Cluster assignment
     val clusterAssignment: RDD[String] = alldata.map {
       case (songID, vec) =>
-        (songID, clusters.predict(vec))
+        (songID, vec, clusters.predict(vec))
     }.map {
-      case (songID, clusterID) =>
-        "%s %d".format(songID, clusterID)
+      case (songID, vec, clusterID) =>
+        "%s %d %f".format(songID, clusterID, euclideanDistance(vec, clusters.clusterCenters(clusterID)))
     }
     // Write this to S3
     clusterAssignment.saveAsTextFile("s3n://%s/%s".format(bucketName, clusterAssignmentOutputPath))
