@@ -143,12 +143,12 @@
  
     The schema for the data is presented in figure \ref{fig:data_schema}.
  
-    \begin{figure*}
+    \begin{figure}
       \centering
-      \includegraphics[scale=0.6]{img/database}
+      \includegraphics[width=\columnwidth]{img/database}
       \caption{SQL database schema}
       \label{fig:data_schema}
-    \end{figure*}        
+    \end{figure}        
 
     \subsection{Preprocessing}
     \subsubsection{Lyrics preprocessing}
@@ -194,18 +194,16 @@
 	    Source & Source size & Target table & \# of records \\
 	    \hline
 	    track\_metadata.db & 685MB - 1M tracks & songs &
-	    237662\tablefootnote{Only songs present in the musiXmatch dataset were
-	    kept} \\
+	    237662 \\
 	    & & artists & 20521 \\
 	    \hline
 	    lastfm\_tags.db & 567MB - 8.5M (song, tag) pairs & songs &
-	    173730\tablefootnote{This is the number of records with at least one tag}\\
+	    173730\\
 	    \hline
 	    artist\_term.db & 133MB - 1M (artist, term) pairs & terms & 6254\\
 	    & & artist\_terms & 600570\\
 	    \hline
-	    lastfm\_similars.db & 3.8GB - 600k songs\tablefootnote{A single row
-	    contains all the pairs associated with a song}
+	    lastfm\_similars.db & 3.8GB - 600k songs
 	    & similar\_songs & 8866734 \\
 	    \hline
 	    artist\_similarity.db & 322MB - 2M pairs & similar\_artists & 700608\\
@@ -218,12 +216,12 @@
   
   Figure \ref{fig:architecture} presents the different components of the system.
   
-  \begin{figure*}
+  \begin{figure}
     \centering
-    \includegraphics[scale=0.8]{img/architecture}
+    \includegraphics[width=\columnwidth]{img/architecture}
     \caption{System components}
     \label{fig:architecture}
-  \end{figure*}          
+  \end{figure}          
       
   This system uses different services offered in AWS as building blocks for a
   scalable solution. In the following sections the different components will
@@ -315,7 +313,7 @@
   
   The results obtained by using metrics 1, 2 and 4 are displayed in Tables \ref{tab:song_dis}, \ref{tab:res} and \ref{tab:num_artists_clusters} respectively.
   
-\begin{table*}[h]
+\begin{table*}
 \centering
 \caption{Distribution of songs among various clusters}
 \begin{tabular}{@{}ll@{}}
@@ -335,7 +333,7 @@ Cluster ID & \# Songs \\ \midrule
 \label{tab:song_dis}
 \end{table*}
   
-\begin{table*}[h]
+\begin{table*}
 \centering
 \caption{Similar song results obtained with $k = 5$ and $r = 100$}
 \begin{tabular}{@{}llll@{}}
@@ -355,7 +353,7 @@ Cluster ID & Recall             & Precision            & F1 score             \\
 \label{tab:res}
 \end{table*}
 
-\begin{table*}[!t]
+\begin{table*}
 \caption{Uniqueness of artists to a cluster. For instance, this indicates that there exist 3 artists which appear in 8 clusters and 8228 artists that appear in only a single cluster}
 \centering
 \begin{tabular}{@{}ll@{}}
@@ -372,13 +370,11 @@ Cluster ID & Recall             & Precision            & F1 score             \\
 \end{tabular}
 \label{tab:num_artists_clusters}
 \end{table*}
-  
-  \subsection{So, can it detect genres?}
-  TODO: Expand with the items from point 5 from the last milestone
+   \subsection{So, can it detect genres?}
   Surprisingly, it does.
   We initially started off using the centroid of the clusters as being representative of the genres.
   However, this did not yield such meaningful results.
-  One useful observation we did come across was that bad cluster centres, i.e, ones that have poor recall values, made use of extemely generic words.
+  One useful observation we did come across was that bad cluster centres, i.e, ones that have poor recall values, made use of extremely generic words.
   
   Cluster centroids need not however be representative of their songs.
   So, we proceeded to look at the artists and artist-tags contained in each cluster.
@@ -386,6 +382,42 @@ Cluster ID & Recall             & Precision            & F1 score             \\
   Few clusters were representative of the language of the lyrics, such as German, Spanish, French and Nordic.
   Furthermore, we also noticed clusters which were in English, and yet contained diverse genres.
   Examples include one containing death metal and another a combination of rap and rock.
+  
+  \section{Conclusions}
+  One of the initial considerations when looking through the available data was if it was
+  worth it to enhance it by using a wider corpus of lyrics, i.e. scraping web pages that
+  contain lyrics. However, it was decided to not invest time on this expensive approach
+  until the effectiveness of the method was assessed with the available data from the
+  MSD, looking at the results shows that this was the right decision because even though
+  a bigger set of lyrics data may lead to more interesting features and results, the
+  investment in time and computation, especially the human effort to devise scraping and
+  data cleaning tools, was not suited to the scope of this project.
+  
+  Computation-wise there is clearly a lot of room of improvement, the current techniques
+  are somewhat naive but still comfortably fast and produce quality results, one
+  possible direction for further work is the use of more sophisticated clustering
+  algorithms suited for distributing computing, especially hierarchical clustering
+  algorithms which seem well suited for the task of identifying genres because there
+  exists a structure between genres and the so-called sub-genres. In the presented
+  results so far, only major genres were considered.
+  
+  A major challenge with the selected problem, is the lack of a clear definition
+  of what each genre constitutes and especially the genres that a single song belongs to.
+  This is one of the main reasons that led to an unsupervised learning approach even
+  though the MSD dataset provides some labels on genres and artists which
+  suggests that a supervised classification methodology would be more appropriate, this
+  highlight shows how in some cases even human judgments and high
+  quality data are not necessarily suitable for consumption by algorithms without
+  further processing based the context, this is an important
+  remark to make because even though the available dataset can be considered, in many
+  senses, a high quality one this doesn't entail that it can be used blindly with
+  traditional methods of machine learning, there is still an important component of
+  analysis and tailoring to extract information out of the data.
+  
+  The use of different distributed computing frameworks and techniques proved to be
+  an effective approach, not only for the final result, but also for learning
+  because it presented challenges at the levels of system integration and design which
+  are usually not present in smaller projects in academic life.  
   
   \printbibliography
 \end{document}
